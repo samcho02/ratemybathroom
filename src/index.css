@@ -160,10 +160,13 @@ body,
 }
 
 .movie-description {
-  font-size: 14px;
-  margin-top: 8px;
   max-height: 60px;
   overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.movie-description.expanded {
+  max-height: 200px;
 }
 
 .movie-actions {
