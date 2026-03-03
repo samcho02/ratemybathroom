@@ -1,13 +1,31 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
 
-  const categories = [
-    { id: "restaurants", label: "Restaurants" },
-    { id: "movies", label: "Movies" },
-    { id: "bathrooms", label: "Bathrooms" },
-  ];
+  /* ===========================
+     FETCH CATEGORIES
+  =========================== */
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/categories");
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  /* ===========================
+     RENDER
+  =========================== */
 
   return (
     <div className="category-page">
@@ -17,11 +35,11 @@ export default function Home() {
         <div className="category-list">
           {categories.map((c) => (
             <button
-              key={c.id}
-              onClick={() => navigate(`/swipe/${c.id}`)}
+              key={c._id}
+              onClick={() => navigate(`/swipe/${c._id}`)}
               className="category-button"
             >
-              {c.label}
+              {c.name}
             </button>
           ))}
         </div>

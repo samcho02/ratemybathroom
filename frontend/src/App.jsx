@@ -7,7 +7,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/swipe/:category" element={<SwipePage />} />
+      <Route path="/swipe/:categoryId" element={<SwipePage />} />
       <Route path="/selected" element={<Selected />} />
     </Routes>
   );

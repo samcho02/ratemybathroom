@@ -1,107 +1,104 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
-import { getRecommendations } from "../services/recommendationEngine";
 
 export default function SwipePage() {
-  const { category } = useParams();
-  const [items, setItems] = useState([]);
-  const [location, setLocation] = useState(null);
-  const [showReviews, setShowReviews] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const { categoryId } = useParams();
   const navigate = useNavigate();
 
+  const [items, setItems] = useState([]);
+  const [showReviews, setShowReviews] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+
+  // local storage
+  const userId = localStorage.getItem("userId");
+
+  /* ===========================
+     LOAD ITEMS FROM BACKEND
+  =========================== */
+
   useEffect(() => {
-    setLocation({
-      lat: 37.4979,
-      lng: 127.0276,
-    });
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/items/${categoryId}`
+        );
+        const data = await res.json();
+        setItems(data);
+      } catch (err) {
+        console.error("Failed to fetch items:", err);
+      }
+    };
+
+    if (categoryId) fetchItems();
   }, []);
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await getRecommendations(category, location);
-      setItems(data);
-    };
-    load();
-  }, [category, location]);
+  /* ===========================
+     HANDLE SWIPE
+  =========================== */
 
-  /**useEffect(() => {
-  fetch(`/api/items/${category}?userId=${userId}`)
-    .then(res => res.json())
-    .then(data => setItems(data));
-  }, [category]);
-  */
-
-  const handleSwipe = (dir, itemId) => {
-    if (dir === "right") {
-      const selectedItem = items.find((i) => i.id === itemId);
-      navigate("/selected", { state: selectedItem });
+  const handleSwipe = async (dir, itemId) => {
+    try {
+      await fetch("http://localhost:5000/api/swipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          itemId,
+          categoryId: categoryId,
+          direction: dir,
+        }),
+      });
+    } catch (err) {
+      console.error("Swipe failed:", err);
     }
 
-    // remove swiped card from stack
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    // Remove from stack visually
+    setItems((prev) => prev.filter((item) => item._id !== itemId));
+
+    if (dir === "right") {
+      const selectedItem = items.find((i) => i._id === itemId);
+      navigate("/selected", { state: selectedItem });
+    }
   };
 
-  /**
-   * const handleSwipe = async (dir, itemId) => {
-  await fetch("/api/swipe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      itemId,
-      direction: dir,
-      categoryId: category
-    })
-  });
-
-  setItems(prev => prev.filter(i => i._id !== itemId));
-  };
-   */
+  /* ===========================
+     RENDER
+  =========================== */
 
   return (
     <div className="swipe-container">
       {items.map((item) => (
         <TinderCard
-          key={item.id}
-          onSwipe={(dir) => handleSwipe(dir, item.id)}
+          key={item._id}
+          onSwipe={(dir) => handleSwipe(dir, item._id)}
           preventSwipe={["up", "down"]}
         >
           <div
-            className="movie-card"
+            className="item-card"
             style={{ backgroundImage: `url(${item.imageUrl})` }}
           >
-            <div className="movie-overlay">
-              <div className="movie-info">
+            <div className="item-overlay">
+              <div className="item-info">
                 <h2>{item.name}</h2>
-                <p className="movie-meta">
-                  ⭐ {item.rating} • {item.genre}
-                </p>
+
                 <p
-                  className={`movie-description ${expanded ? "expanded" : ""}`}
+                  className={`item-description ${expanded ? "expanded" : ""}`}
                   onClick={() => setExpanded(!expanded)}
                 >
                   {item.description}
                 </p>
               </div>
 
-              <div className="movie-actions">
-                <button onClick={() => setShowReviews(item.id)}>
-                  💬 {item.reviews?.length || 0}
-                </button>
+              <div className="item-actions">
+                <button onClick={() => setShowReviews(item._id)}>💬</button>
               </div>
             </div>
 
-            {showReviews === item.id && (
+            {showReviews === item._id && (
               <div className="review-drawer">
                 <h3>Reviews</h3>
-                {item.reviews.map((r) => (
-                  <div key={r.id} className="review">
-                    <strong>{r.user}</strong>
-                    <p>{r.text}</p>
-                  </div>
-                ))}
+                <p>No reviews yet.</p>
                 <button
                   className="close-reviews"
                   onClick={() => setShowReviews(null)}
