@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 
 import User from "./models/User.js";
 import Category from "./models/Category.js";
+import categoryRoutes from "./routes/category.routes.js";
 import Item from "./models/Item.js";
 import Swipe from "./models/Swipe.js";
 
@@ -54,25 +55,7 @@ app.get("/api/users/:id", async (req, res) => {
    CATEGORY
 =========================== */
 
-// Get all categories
-app.get("/api/categories", async (req, res) => {
-  try {
-    const categories = await Category.find();
-    res.json(categories);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Create category
-app.post("/api/categories", async (req, res) => {
-  try {
-    const category = await Category.create(req.body);
-    res.json(category);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use("/api/categories", categoryRoutes);
 
 /* ===========================
    ITEM
