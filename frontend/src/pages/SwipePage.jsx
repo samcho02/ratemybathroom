@@ -89,10 +89,19 @@ export default function SwipePage() {
      RENDER STATES
   =========================== */
 
-  if (loading) return <div className="swipe-container">Loading...</div>;
+  if (loading)
+    return (
+      <div className="swipe-container state-screen">
+        <div className="state-message">Loading...</div>
+      </div>
+    );
   if (error) return <div className="swipe-container">Error: {error}</div>;
   if (!items.length)
-    return <div className="swipe-container">No more items</div>;
+    return (
+      <div className="swipe-container state-screen">
+        <div className="state-message">No more items</div>
+      </div>
+    );
 
   /* ===========================
      RENDER UI

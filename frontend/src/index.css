@@ -222,3 +222,16 @@ body,
 
   box-sizing: border-box; /* prevents overflow */
 }
+
+/* ---------- STATE SCREENS ---------- */
+
+.state-screen {
+  text-align: center;
+}
+
+.state-message {
+  color: white;
+  font-size: 20px;
+  font-weight: 500;
+  opacity: 0.85;
+}
