@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 
 import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
+import itemRoutes from "./routes/item.routes.js";
 import Item from "./models/Item.js";
 import Swipe from "./models/Swipe.js";
 
@@ -42,76 +43,7 @@ app.use("/api/categories", categoryRoutes);
    ITEM
 =========================== */
 
-// Create item
-app.post("/api/items", async (req, res) => {
-  try {
-    const item = await Item.create(req.body);
-    res.json(item);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get items by category (sorted by score with penalty)
-app.get("/api/items/:categoryId", async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-
-    // Aggregate raw score per item
-    const ranking = await Swipe.aggregate([
-      { $match: { categoryId: new mongoose.Types.ObjectId(categoryId) } },
-      {
-        $group: {
-          _id: "$itemId",
-          score: {
-            $sum: {
-              $cond: [{ $eq: ["$direction", "right"] }, 1, -1],
-            },
-          },
-          totalSwipes: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Build score map
-    const scoreMap = {};
-    ranking.forEach((r) => {
-      scoreMap[r._id.toString()] = {
-        rawScore: r.score,
-        totalSwipes: r.totalSwipes,
-      };
-    });
-
-    // Fetch ALL items in category
-    const items = await Item.find({ categoryId });
-
-    // Apply penalty / damping function
-    const sorted = items
-      .map((item) => {
-        const stats = scoreMap[item._id.toString()] || {
-          rawScore: 0,
-          totalSwipes: 0,
-        };
-
-        // --- Penalty Formula ---
-        // Idea: dampen high-confidence items slightly
-        // Example: score / (1 + log(totalSwipes))
-        const adjustedScore =
-          stats.rawScore / (1 + Math.log(1 + stats.totalSwipes));
-
-        return {
-          ...item.toObject(),
-          rawScore: stats.rawScore,
-          adjustedScore,
-        };
-      })
-      .sort((a, b) => b.adjustedScore - a.adjustedScore);
-
-    res.json(sorted);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use("/api/items", itemRoutes);
 
 /* ===========================
    SWIPE
