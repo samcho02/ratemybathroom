@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import User from "./models/User.js";
-import Category from "./models/Category.js";
+import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import Item from "./models/Item.js";
 import Swipe from "./models/Swipe.js";
@@ -31,25 +30,7 @@ mongoose
    USER
 =========================== */
 
-// Create user
-app.post("/api/users", async (req, res) => {
-  try {
-    const user = await User.create(req.body);
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get user
-app.get("/api/users/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use("/api/users", userRoutes);
 
 /* ===========================
    CATEGORY
