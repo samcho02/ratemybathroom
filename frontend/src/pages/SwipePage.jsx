@@ -8,6 +8,7 @@ export default function SwipePage() {
   const [items, setItems] = useState([]);
   const [location, setLocation] = useState(null);
   const [showReviews, setShowReviews] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,18 +26,46 @@ export default function SwipePage() {
     load();
   }, [category, location]);
 
-  const handleSwipe = (dir, item) => {
+  /**useEffect(() => {
+  fetch(`/api/items/${category}?userId=${userId}`)
+    .then(res => res.json())
+    .then(data => setItems(data));
+  }, [category]);
+  */
+
+  const handleSwipe = (dir, itemId) => {
     if (dir === "right") {
-      navigate("/selected", { state: item });
+      const selectedItem = items.find((i) => i.id === itemId);
+      navigate("/selected", { state: selectedItem });
     }
+
+    // remove swiped card from stack
+    setItems((prev) => prev.filter((item) => item.id !== itemId));
   };
+
+  /**
+   * const handleSwipe = async (dir, itemId) => {
+  await fetch("/api/swipe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      itemId,
+      direction: dir,
+      categoryId: category
+    })
+  });
+
+  setItems(prev => prev.filter(i => i._id !== itemId));
+  };
+   */
 
   return (
     <div className="swipe-container">
       {items.map((item) => (
         <TinderCard
           key={item.id}
-          onSwipe={(dir) => handleSwipe(dir, item)}
+          onSwipe={(dir) => handleSwipe(dir, item.id)}
           preventSwipe={["up", "down"]}
         >
           <div
@@ -49,7 +78,12 @@ export default function SwipePage() {
                 <p className="movie-meta">
                   ⭐ {item.rating} • {item.genre}
                 </p>
-                <p className="movie-description">{item.description}</p>
+                <p
+                  className={`movie-description ${expanded ? "expanded" : ""}`}
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {item.description}
+                </p>
               </div>
 
               <div className="movie-actions">
