@@ -26,6 +26,13 @@ export default function SwipePage() {
     load();
   }, [category, location]);
 
+  /**useEffect(() => {
+  fetch(`/api/items/${category}?userId=${userId}`)
+    .then(res => res.json())
+    .then(data => setItems(data));
+  }, [category]);
+  */
+
   const handleSwipe = (dir, itemId) => {
     if (dir === "right") {
       const selectedItem = items.find((i) => i.id === itemId);
@@ -35,6 +42,23 @@ export default function SwipePage() {
     // remove swiped card from stack
     setItems((prev) => prev.filter((item) => item.id !== itemId));
   };
+
+  /**
+   * const handleSwipe = async (dir, itemId) => {
+  await fetch("/api/swipe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      itemId,
+      direction: dir,
+      categoryId: category
+    })
+  });
+
+  setItems(prev => prev.filter(i => i._id !== itemId));
+  };
+   */
 
   return (
     <div className="swipe-container">
