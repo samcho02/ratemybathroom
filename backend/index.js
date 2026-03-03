@@ -6,8 +6,7 @@ import dotenv from "dotenv";
 import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import itemRoutes from "./routes/item.routes.js";
-import Item from "./models/Item.js";
-import Swipe from "./models/Swipe.js";
+import swipeRoutes from "./routes/swipe.routes.js";
 
 dotenv.config();
 
@@ -27,44 +26,17 @@ mongoose
   .then(() => console.log("Mongo connected"))
   .catch((err) => console.error("Mongo connection error:", err));
 
-/* ===========================
-   USER
-=========================== */
-
+// User Route
 app.use("/api/users", userRoutes);
 
-/* ===========================
-   CATEGORY
-=========================== */
-
+// Category Route
 app.use("/api/categories", categoryRoutes);
 
-/* ===========================
-   ITEM
-=========================== */
-
+// Item Route
 app.use("/api/items", itemRoutes);
 
-/* ===========================
-   SWIPE
-=========================== */
-
-app.post("/api/swipe", async (req, res) => {
-  try {
-    const { userId, itemId, categoryId, direction } = req.body;
-
-    const swipe = await Swipe.create({
-      userId,
-      itemId,
-      categoryId,
-      direction,
-    });
-
-    res.json(swipe);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// Swipe Route
+app.use("/api/swipe", swipeRoutes);
 
 /* ===========================
    HEALTH CHECK
