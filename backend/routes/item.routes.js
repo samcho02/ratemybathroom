@@ -1,7 +1,8 @@
 import express from "express";
-import mongoose from "mongoose";
-import Item from "../models/Item.js";
-import Swipe from "../models/Swipe.js";
+import {
+  createItem,
+  getRankedItemsByCategory,
+} from "../services/item.service.js";
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const router = express.Router();
 // Create item
 router.post("/", async (req, res) => {
   try {
-    const item = await Item.create(req.body);
+    const item = await createItem(req.body);
     res.json(item);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,53 +23,12 @@ router.post("/", async (req, res) => {
 // Get items by category (sorted by score with penalty)
 router.get("/:categoryId", async (req, res) => {
   try {
-    const { categoryId } = req.params;
-
-    const ranking = await Swipe.aggregate([
-      { $match: { categoryId: new mongoose.Types.ObjectId(categoryId) } },
-      {
-        $group: {
-          _id: "$itemId",
-          score: {
-            $sum: {
-              $cond: [{ $eq: ["$direction", "right"] }, 1, -1],
-            },
-          },
-          totalSwipes: { $sum: 1 },
-        },
-      },
-    ]);
-
-    const scoreMap = {};
-    ranking.forEach((r) => {
-      scoreMap[r._id.toString()] = {
-        rawScore: r.score,
-        totalSwipes: r.totalSwipes,
-      };
-    });
-
-    const items = await Item.find({ categoryId });
-
-    const sorted = items
-      .map((item) => {
-        const stats = scoreMap[item._id.toString()] || {
-          rawScore: 0,
-          totalSwipes: 0,
-        };
-
-        const adjustedScore =
-          stats.rawScore / (1 + Math.log(1 + stats.totalSwipes));
-
-        return {
-          ...item.toObject(),
-          rawScore: stats.rawScore,
-          adjustedScore,
-        };
-      })
-      .sort((a, b) => b.adjustedScore - a.adjustedScore);
-
-    res.json(sorted);
+    const items = await getRankedItemsByCategory(req.params.categoryId);
+    res.json(items);
   } catch (err) {
+    if (err.message === "Invalid categoryId") {
+      return res.status(400).json({ error: err.message });
+    }
     res.status(500).json({ error: err.message });
   }
 });
