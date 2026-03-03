@@ -1,69 +1,101 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function SwipePage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
-  const [showReviews, setShowReviews] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [reviewOpenId, setReviewOpenId] = useState(null);
 
-  // local storage
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const userId = localStorage.getItem("userId");
 
   /* ===========================
-     LOAD ITEMS FROM BACKEND
+     LOAD ITEMS
   =========================== */
 
   useEffect(() => {
+    if (!categoryId) return;
+
+    const controller = new AbortController();
+
     const fetchItems = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:5000/api/items/${categoryId}`
-        );
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(`${API}/api/items/${categoryId}`, {
+          signal: controller.signal,
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch items");
+
         const data = await res.json();
         setItems(data);
       } catch (err) {
-        console.error("Failed to fetch items:", err);
+        if (err.name !== "AbortError") {
+          setError(err.message);
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (categoryId) fetchItems();
-  }, []);
+    fetchItems();
+
+    return () => controller.abort();
+  }, [categoryId]);
 
   /* ===========================
      HANDLE SWIPE
   =========================== */
 
-  const handleSwipe = async (dir, itemId) => {
-    try {
-      await fetch("http://localhost:5000/api/swipe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          itemId,
-          categoryId: categoryId,
-          direction: dir,
-        }),
-      });
-    } catch (err) {
-      console.error("Swipe failed:", err);
-    }
-
-    // Remove from stack visually
-    setItems((prev) => prev.filter((item) => item._id !== itemId));
-
-    if (dir === "right") {
+  const handleSwipe = useCallback(
+    async (direction, itemId) => {
       const selectedItem = items.find((i) => i._id === itemId);
-      navigate("/selected", { state: selectedItem });
-    }
-  };
+
+      setItems((prev) => prev.filter((i) => i._id !== itemId));
+
+      try {
+        await fetch(`${API}/api/swipe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            itemId,
+            categoryId,
+            direction,
+          }),
+        });
+      } catch (err) {
+        console.error("Swipe failed:", err);
+      }
+
+      if (direction === "right" && selectedItem) {
+        navigate("/selected", { state: selectedItem });
+      }
+    },
+    [items, categoryId, userId, navigate]
+  );
 
   /* ===========================
-     RENDER
+     RENDER STATES
+  =========================== */
+
+  if (loading) return <div className="swipe-container">Loading...</div>;
+  if (error) return <div className="swipe-container">Error: {error}</div>;
+  if (!items.length)
+    return <div className="swipe-container">No more items</div>;
+
+  /* ===========================
+     RENDER UI
   =========================== */
 
   return (
@@ -83,25 +115,31 @@ export default function SwipePage() {
                 <h2>{item.name}</h2>
 
                 <p
-                  className={`item-description ${expanded ? "expanded" : ""}`}
-                  onClick={() => setExpanded(!expanded)}
+                  className={`item-description ${
+                    expandedId === item._id ? "expanded" : ""
+                  }`}
+                  onClick={() =>
+                    setExpandedId((prev) =>
+                      prev === item._id ? null : item._id
+                    )
+                  }
                 >
                   {item.description}
                 </p>
               </div>
 
               <div className="item-actions">
-                <button onClick={() => setShowReviews(item._id)}>💬</button>
+                <button onClick={() => setReviewOpenId(item._id)}>💬</button>
               </div>
             </div>
 
-            {showReviews === item._id && (
+            {reviewOpenId === item._id && (
               <div className="review-drawer">
                 <h3>Reviews</h3>
                 <p>No reviews yet.</p>
                 <button
                   className="close-reviews"
-                  onClick={() => setShowReviews(null)}
+                  onClick={() => setReviewOpenId(null)}
                 >
                   Close
                 </button>
