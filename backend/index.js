@@ -88,17 +88,12 @@ app.post("/api/items", async (req, res) => {
   }
 });
 
-// Get items by category (with ranking)
+// Get items by category (sorted by score with penalty)
 app.get("/api/items/:categoryId", async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const { userId } = req.query;
 
-    // Exclude already swiped items
-    const swiped = await Swipe.find({ userId, categoryId }).select("itemId");
-    const swipedIds = swiped.map((s) => s.itemId);
-
-    // Aggregate ranking score
+    // Aggregate raw score per item
     const ranking = await Swipe.aggregate([
       { $match: { categoryId: new mongoose.Types.ObjectId(categoryId) } },
       {
@@ -109,27 +104,44 @@ app.get("/api/items/:categoryId", async (req, res) => {
               $cond: [{ $eq: ["$direction", "right"] }, 1, -1],
             },
           },
+          totalSwipes: { $sum: 1 },
         },
       },
     ]);
 
+    // Build score map
     const scoreMap = {};
     ranking.forEach((r) => {
-      scoreMap[r._id.toString()] = r.score;
+      scoreMap[r._id.toString()] = {
+        rawScore: r.score,
+        totalSwipes: r.totalSwipes,
+      };
     });
 
-    // Fetch items not yet swiped
-    const items = await Item.find({
-      categoryId,
-      _id: { $nin: swipedIds },
-    });
+    // Fetch ALL items in category
+    const items = await Item.find({ categoryId });
 
-    // Sort by score
-    const sorted = items.sort((a, b) => {
-      const scoreA = scoreMap[a._id.toString()] || 0;
-      const scoreB = scoreMap[b._id.toString()] || 0;
-      return scoreB - scoreA;
-    });
+    // Apply penalty / damping function
+    const sorted = items
+      .map((item) => {
+        const stats = scoreMap[item._id.toString()] || {
+          rawScore: 0,
+          totalSwipes: 0,
+        };
+
+        // --- Penalty Formula ---
+        // Idea: dampen high-confidence items slightly
+        // Example: score / (1 + log(totalSwipes))
+        const adjustedScore =
+          stats.rawScore / (1 + Math.log(1 + stats.totalSwipes));
+
+        return {
+          ...item.toObject(),
+          rawScore: stats.rawScore,
+          adjustedScore,
+        };
+      })
+      .sort((a, b) => b.adjustedScore - a.adjustedScore);
 
     res.json(sorted);
   } catch (err) {
