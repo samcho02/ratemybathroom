@@ -7,6 +7,27 @@ const router = express.Router();
    Stack
 =========================== */
 
+// POST created stack
+router.post("/create", async (req, res) => {
+  try {
+    const stack = await Stack.create(req.body);
+    res.json(stack);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// // POST created stack
+// router.post("/create", authMiddleware, async (req, res) => {
+//   const stack = new Stack({
+//     ...req.body,
+//     createdBy: req.user._id,
+//   });
+
+//   await stack.save();
+//   res.json(stack);
+// });
+
 // GET Stack, stack selected by user, populate items
 router.get("/:stackId", async (req, res) => {
   const stack = await Stack.findById(req.params.stackId).populate(

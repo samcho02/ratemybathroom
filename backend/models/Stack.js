@@ -14,7 +14,8 @@ const stackSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      // required: true,
+      default: null, // fix
     },
 
     parentStackId: {
@@ -27,6 +28,7 @@ const stackSchema = new mongoose.Schema(
       {
         itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
         position: Number,
+        default: [],
       },
     ],
 
