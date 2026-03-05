@@ -6,6 +6,7 @@ import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import itemRoutes from "./routes/item.routes.js";
 import swipeRoutes from "./routes/swipe.routes.js";
+import stackRoutes from "./routes/stack.routes.js";
 
 dotenv.config();
 
@@ -29,6 +30,9 @@ app.use("/api/users", userRoutes);
 
 // Category Route
 app.use("/api/categories", categoryRoutes);
+
+// Stack Route
+app.use("/api/stacks", stackRoutes);
 
 // Item Route
 app.use("/api/items", itemRoutes);

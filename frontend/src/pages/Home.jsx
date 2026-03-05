@@ -33,13 +33,13 @@ export default function Home() {
         <h1 className="category-title">What are you choosing today?</h1>
 
         <div className="category-list">
-          {categories.map((c) => (
+          {categories.map((category) => (
             <button
-              key={c._id}
-              onClick={() => navigate(`/swipe/${c._id}`)}
+              key={category._id}
+              onClick={() => navigate(`/category/${category._id}/stacks`)}
               className="category-button"
             >
-              {c.name}
+              {category.name}
             </button>
           ))}
         </div>

@@ -5,7 +5,7 @@ import TinderCard from "react-tinder-card";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function SwipePage() {
-  const { categoryId } = useParams();
+  const { stackId } = useParams();
   const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
@@ -22,7 +22,7 @@ export default function SwipePage() {
   =========================== */
 
   useEffect(() => {
-    if (!categoryId) return;
+    if (!stackId) return;
 
     const controller = new AbortController();
 
@@ -31,7 +31,7 @@ export default function SwipePage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API}/api/items/${categoryId}`, {
+        const res = await fetch(`${API}/api/items/${stackId}`, {
           signal: controller.signal,
         });
 
@@ -51,7 +51,7 @@ export default function SwipePage() {
     fetchItems();
 
     return () => controller.abort();
-  }, [categoryId]);
+  }, [stackId]);
 
   /* ===========================
      HANDLE SWIPE
@@ -70,7 +70,7 @@ export default function SwipePage() {
           body: JSON.stringify({
             userId,
             itemId,
-            categoryId,
+            categoryId: stackId,
             direction,
           }),
         });
@@ -82,7 +82,7 @@ export default function SwipePage() {
         navigate("/selected", { state: selectedItem });
       }
     },
-    [items, categoryId, userId, navigate]
+    [items, stackId, userId, navigate]
   );
 
   /* ===========================
