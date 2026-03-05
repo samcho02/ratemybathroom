@@ -110,7 +110,7 @@ body,
   transform: translateY(-2px);
 }
 
-/* ---------- MOVIE SWIPE UI ---------- */
+/* ---------- Item UI ---------- */
 
 .swipe-container {
   position: relative;
@@ -120,7 +120,7 @@ body,
   background: black;
 }
 
-.movie-card {
+.item-card {
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -128,7 +128,7 @@ body,
   background-position: center;
 }
 
-.movie-overlay {
+.item-overlay {
   position: absolute;
   bottom: 0;
   width: 100%;
@@ -142,40 +142,36 @@ body,
   color: white;
   display: flex;
   justify-content: space-between;
+  box-sizing: border-box;
   align-items: flex-end;
 }
 
-.movie-info {
+.item-info {
   max-width: 75%;
 }
 
-.movie-info h2 {
+.item-info h2 {
   margin: 0;
   font-size: 22px;
 }
 
-.movie-meta {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-.movie-description {
+.item-description {
   max-height: 60px;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
 
-.movie-description.expanded {
+.item-description.expanded {
   max-height: 200px;
 }
 
-.movie-actions {
+.item-actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.movie-actions button {
+.item-actions button {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   padding: 10px;
@@ -185,29 +181,57 @@ body,
   color: white;
 }
 
+/* Fix drawer overflow */
 .review-drawer {
   position: absolute;
   bottom: 0;
+  left: 0; /* anchor left */
+  right: 0; /* anchor right */
   width: 100%;
   height: 50%;
+
   background: #111;
   color: white;
+
   padding: 20px;
+  box-sizing: border-box; /* prevents padding from extending width */
+
   overflow-y: auto;
+  overflow-x: hidden; /* prevent horizontal scroll */
+
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
 }
 
+/* Ensure reviews don't overflow */
 .review {
   margin-bottom: 12px;
+  word-wrap: break-word;
 }
 
+/* Ensure close button fits properly */
 .close-reviews {
   margin-top: 12px;
   width: 100%;
   padding: 10px;
+
   background: #333;
   border: none;
   color: white;
   border-radius: 8px;
+
+  box-sizing: border-box; /* prevents overflow */
+}
+
+/* ---------- STATE SCREENS ---------- */
+
+.state-screen {
+  text-align: center;
+}
+
+.state-message {
+  color: white;
+  font-size: 20px;
+  font-weight: 500;
+  opacity: 0.85;
 }
