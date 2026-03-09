@@ -6,8 +6,10 @@ export default function StackList() {
   const navigate = useNavigate();
   const [stacks, setStacks] = useState([]);
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
-    fetch(`http://localhost:5000/api/stacks/category/${categoryId}`)
+    fetch(`${API_BASE}/stacks/category/${categoryId}`)
       .then((res) => res.json())
       .then((data) => setStacks(data));
   }, [categoryId]);

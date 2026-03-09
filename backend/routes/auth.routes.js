@@ -1,39 +1,38 @@
-import express from "express";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 
-const router = express.Router();
-
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-router.post("/google", async (req, res) => {
+export const authMiddleware = async (req, res, next) => {
   try {
-    const { token } = req.body;
+    // 1. Get token from headers (e.g., "Authorization: Bearer <token>")
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No token provided" });
+    }
 
+    const token = authHeader.split(" ")[1];
+
+    // 2. Verify Google ID Token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
+    const { sub: googleId } = payload;
 
-    const { sub, email, name, picture } = payload;
-
-    let user = await User.findOne({ googleId: sub });
-
+    // 3. Find the user in your database
+    const user = await User.findOne({ googleId });
     if (!user) {
-      user = await User.create({
-        googleId: sub,
-        email,
-        name,
-        avatar: picture,
-      });
+      return res.status(401).json({ error: "User not found" });
     }
 
-    res.json(user);
+    // 4. Attach user to request object for use in routes
+    req.user = user;
+    next();
   } catch (err) {
-    res.status(401).json({ error: "Google authentication failed" });
+    console.error("Auth Middleware Error:", err);
+    res.status(401).json({ error: "Authentication failed" });
   }
-});
-
-export default router;
+};

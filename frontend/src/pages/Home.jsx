@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const navigate = useNavigate();
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   const [categories, setCategories] = useState([]);
 
   /* ===========================
@@ -12,7 +15,7 @@ export default function Home() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/categories");
+        const res = await fetch(`${API_BASE}/categories`);
         const data = await res.json();
         setCategories(data);
       } catch (err) {

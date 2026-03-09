@@ -5,13 +5,22 @@ export default function CreateStack() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/stacks/create", {
+    const token = localStorage.getItem("googleToken");
+
+    if (!token) {
+      alert("You must be logged in to create a stack.");
+      return navigate("/"); // Redirect to login or home if no token
+    }
+
+    const res = await fetch(`${API_BASE}/stacks/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -5,30 +5,29 @@ export default function RemixStack() {
   const { stackId } = useParams();
   const navigate = useNavigate();
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   const [stack, setStack] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/stacks/${stackId}`)
+    fetch(`${API_BASE}/stacks/${stackId}`)
       .then((res) => res.json())
       .then((data) => setStack(data));
   }, [stackId]);
 
   const handleRemix = async () => {
-    const userId = localStorage.getItem("userId");
+    // Assuming you store the Google ID token in localStorage after login
+    const token = localStorage.getItem("googleToken");
 
-    const res = await fetch(
-      `http://localhost:5000/api/stacks/${stackId}/remix`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId }),
-      }
-    );
+    const res = await fetch(`${API_BASE}/stacks/${stackId}/remix`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Send the token here
+      },
+    });
 
     const newStack = await res.json();
-
     navigate(`/stack/${newStack._id}`);
   };
 
