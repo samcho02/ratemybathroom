@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TinderCard from "react-tinder-card";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export default function SwipePage() {
   const { stackId } = useParams();
@@ -31,7 +31,7 @@ export default function SwipePage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API}/api/items/${stackId}`, {
+        const res = await fetch(`${API_BASE}/items/${stackId}`, {
           signal: controller.signal,
         });
 
@@ -64,13 +64,13 @@ export default function SwipePage() {
       setItems((prev) => prev.filter((i) => i._id !== itemId));
 
       try {
-        await fetch(`${API}/api/swipe`, {
+        await fetch(`${API_BASE}/swipe`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
             itemId,
-            categoryId: stackId,
+            stackId: stackId,
             direction,
           }),
         });
